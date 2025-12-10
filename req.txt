@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+torch
+transformers
+mlflow
+pydantic
+scikit-learn
+joblib
+prometheus-client==0.20.0
