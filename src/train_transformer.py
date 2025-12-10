@@ -1,12 +1,14 @@
-import os
+#!/usr/bin/env python3
+# src/train_transformer.py - Verify transformer model exists
 import json
+import os
 import sys
 
 print("TRANSFORMER TRAINING - Loading pre-trained model from Colab")
 print("=" * 60)
 
 # Check if model folder exists
-model_path = "../models/enhanced_multilingual_model"
+model_path = "models/enhanced_multilingual_model"
 if not os.path.exists(model_path):
     print(f"ERROR: Model folder '{model_path}' not found!")
     print("Please copy your Colab-trained model to this folder.")
