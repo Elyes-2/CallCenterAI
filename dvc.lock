@@ -1,31 +1,47 @@
 schema: '2.0'
 stages:
   train_tfidf:
-    cmd: python src/train.py --model tfidf
+    cmd: python src/train.py
     deps:
-    - path: data/all_tickets_processed_improved_v3.csv
+    - path: data/.prepared
       hash: md5
-      md5: a05aa13d753884547cc46e6f525bfb82
-      size: 14568920
+      md5: 50610baf2a1fea9be017c85dfe439fb1
+      size: 10
     - path: src/train.py
       hash: md5
-      md5: a66862dfafe3c8cf347116841216d380
-      size: 5570
+      md5: f6a9fb119729e12c7b8bfc83385dd0cd
+      size: 5946
     outs:
     - path: models/tfidf_svm_best.pkl
       hash: md5
-      md5: 96619e403dccf18e85f6edee6ad76ddc
-      size: 10899312
+      md5: 89c239d3bc095baaaf35cd28f092e5c7
+      size: 10899232
   train_transformer:
-    cmd: python src/train.py --model transformer
+    cmd: python src/train_transformer.py
     deps:
-    - path: data/all_tickets_processed_improved_v3.csv
+    - path: data/.prepared
       hash: md5
-      md5: a05aa13d753884547cc46e6f525bfb82
-      size: 14568920
+      md5: d41d8cd98f00b204e9800998ecf8427e
+      size: 0
+    - path: src/train_transformer.py
+      hash: md5
+      md5: 8681af324cdf21c333dfa237ac12a498
+      size: 1450
     outs:
     - path: models/enhanced_multilingual_model
       hash: md5
       md5: d43e0b927f6e8a0296425c66e08c2238.dir
       size: 545259279
       nfiles: 8
+  prepare:
+    cmd: echo "Data already prepared" && echo "ready" > data/.prepared
+    deps:
+    - path: data/all_tickets_processed_improved_v3.csv
+      hash: md5
+      md5: a95d3fbefcc211c3ab4002017c4215b1
+      size: 14521082
+    outs:
+    - path: data/.prepared
+      hash: md5
+      md5: 50610baf2a1fea9be017c85dfe439fb1
+      size: 10

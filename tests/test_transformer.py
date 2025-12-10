@@ -31,3 +31,4 @@ def test_transformer_metrics():
     response = client.get("/metrics")
     assert response.status_code == 200
     assert "text/plain" in response.headers["content-type"]
+# pytest .\tests\ -v

@@ -135,8 +135,8 @@ jobs:
         file: ./docker/Dockerfile.tfidf
         push: true
         tags: |
-          theone12/callcenterai-tfidf:latest
-          theone12/callcenterai-tfidf:${{ github.sha }}
+          elyes1kouki/callcenterai-tfidf:latest
+          elyes1kouki/callcenterai-tfidf:${{ github.sha }}
     
     - name: Build and push Transformer image
       if: github.event_name == 'push'
@@ -146,8 +146,8 @@ jobs:
         file: ./docker/Dockerfile.transformer
         push: true
         tags: |
-          theone12/callcenterai-transformer:latest
-          theone12/callcenterai-transformer:${{ github.sha }}
+          elyes1kouki/callcenterai-transformer:latest
+          elyes1kouki/callcenterai-transformer:${{ github.sha }}
     
     - name: Build and push Agent image
       if: github.event_name == 'push'
@@ -157,5 +157,5 @@ jobs:
         file: ./docker/Dockerfile.agent
         push: true
         tags: |
-          theone12/callcenterai-agent:latest
-          theone12/callcenterai-agent:${{ github.sha }}
+          elyes1kouki/callcenterai-agent:latest
+          elyes1kouki/callcenterai-agent:${{ github.sha }}

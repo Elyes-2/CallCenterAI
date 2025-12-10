@@ -30,7 +30,7 @@ def test_api_contract():
         {"text": "printer broken", "expected_models": ["tfidf", "TF-IDF + SVM"]},
         {
             "text": "complex technical issue with multiple systems",
-            "expected_models": ["transformer", "DistilBERT"],
+            "expected_models": ["transformer", "DistilBERT","tfidf+svm" ],
         },
     ]
 

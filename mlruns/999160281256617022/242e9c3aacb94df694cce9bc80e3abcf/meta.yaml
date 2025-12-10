@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/Elyes/Desktop/CallCenterAI/mlruns/999160281256617022/242e9c3aacb94df694cce9bc80e3abcf/artifacts
+end_time: 1765383118015
+entry_point_name: ''
+experiment_id: '999160281256617022'
+lifecycle_stage: active
+run_id: 242e9c3aacb94df694cce9bc80e3abcf
+run_name: TFIDF_SVM_Run
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765383112416
+status: 3
+tags: []
+user_id: Elyes

@@ -608,4 +608,3 @@ for error in errors:
     print(f"Confidence: {error['confidence']:.1%}")
     print()
 
-#60% accuracy BADEL MODEL FOR GOD SAKE     
