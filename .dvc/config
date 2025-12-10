@@ -4,3 +4,4 @@
     url = gdrive://1h9Nw7RqYbTkFEeufrazPnFinKFEhvdcw
 ['remote "gdrive"']
     url = gdrive://1Tmn2XgFl9jMBPUxTfISU6_t2M7qhc4RT
+    gdrive_service_account_json_file = ~/.config/dvc/gdrive-service-account.json

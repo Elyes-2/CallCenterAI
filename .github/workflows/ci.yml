@@ -56,14 +56,10 @@ jobs:
       env:
         GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
       run: |
-        # Debug: Check if secret exists
-        echo "Secret length: ${#GDRIVE_CREDENTIALS}"
-        
-        # Create credentials file with proper JSON formatting
-        echo "$GDRIVE_CREDENTIALS" > credentials.json
-        echo "Created credentials.json"
-        ls -la credentials.json
-        head -c 200 credentials.json
+        mkdir -p ~/.config/dvc
+        echo "$GDRIVE_CREDENTIALS" > ~/.config/dvc/gdrive-service-account.json
+        echo "Using service account for DVC"
+
     
     - name: Pull models with DVC (skip if fails)
       run: |
