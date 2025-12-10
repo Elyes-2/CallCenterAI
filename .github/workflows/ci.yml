@@ -31,11 +31,11 @@ jobs:
         black src/ tests/ --check --line-length 88
         isort --check-only src/ tests/
 
-  # 2. TESTS (FIXED: Added httpx)
+  # 2. TESTS (WITH DVC PULL)
   test:
     runs-on: ubuntu-latest
     needs: lint
-    timeout-minutes: 10
+    timeout-minutes: 15
     
     steps:
     - uses: actions/checkout@v4
@@ -45,17 +45,34 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Install dependencies for testing
+    - name: Install DVC and core dependencies
       run: |
+        pip install dvc dvc-gdrive
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
-        pip install httpx==0.27.0  # Explicit install
+    
+    - name: Configure DVC with Google Drive
+      env:
+        GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+      run: |
+        echo '$GDRIVE_CREDENTIALS' > credentials.json
+        dvc remote modify gdrive gdrive_use_service_account true
+        dvc remote modify gdrive gdrive_service_account_json_file_path credentials.json
+    
+    - name: Pull models with DVC
+      run: |
+        dvc pull
+        ls -la models/
+    
+    - name: Install transformer dependencies
+      run: |
+        pip install -r req.txt
     
     - name: Run all tests
       run: |
         pytest tests/ -v
 
-  # 3. SECURITY (FIXED: Updated CodeQL to v3)
+  # 3. SECURITY (WITH CODEQL v4)
   security:
     runs-on: ubuntu-latest
     needs: lint
@@ -75,7 +92,7 @@ jobs:
         bandit -r src/ -s B615 --severity-level high
     
     - name: Run Trivy security scan
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.29.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -83,7 +100,7 @@ jobs:
         output: 'trivy-results.sarif'
     
     - name: Upload Trivy results
-      uses: github/codeql-action/upload-sarif@v3  
+      uses: github/codeql-action/upload-sarif@v4
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
@@ -147,14 +164,14 @@ jobs:
     - name: CI/CD Pipeline Complete
       run: |
         echo "=========================================="
-        echo " CI/CD PIPELINE VERIFIED - ALL GREEN!"
+        echo "✅ CI/CD PIPELINE VERIFIED - ALL GREEN!"
         echo "=========================================="
         echo ""
         echo "Professor Requirements Met:"
         echo "  ✓ Lint (black + isort)"
-        echo "  ✓ Tests (unit + integration)"
+        echo "  ✓ Tests (22 tests with DVC models)"
         echo "  ✓ Security (Bandit + Trivy)"
         echo "  ✓ Docker images built & pushed"
         echo "  ✓ CI/CD pipeline green"
         echo ""
-        echo " Project ready for validation!"
+        echo "🎯 Project ready for validation!"
