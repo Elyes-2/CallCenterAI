@@ -7,6 +7,7 @@ on:
     branches: [ main, master ]
 
 jobs:
+  # 1. LINTING
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -30,6 +31,7 @@ jobs:
         black src/ tests/ --check --line-length 88
         isort --check-only src/ tests/
 
+  # 2. TESTS (FIXED: Added httpx)
   test:
     runs-on: ubuntu-latest
     needs: lint
@@ -45,13 +47,15 @@ jobs:
     
     - name: Install dependencies for testing
       run: |
-        pip install -r requirements.txt  # Agent + TF-IDF
-        pip install -r requirements-dev.txt  # Test dependencies
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+        pip install httpx==0.27.0  # Explicit install
     
     - name: Run all tests
       run: |
         pytest tests/ -v
 
+  # 3. SECURITY (FIXED: Updated CodeQL to v3)
   security:
     runs-on: ubuntu-latest
     needs: lint
@@ -79,11 +83,12 @@ jobs:
         output: 'trivy-results.sarif'
     
     - name: Upload Trivy results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3  
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
 
+  # 4. DOCKER BUILD
   build:
     runs-on: ubuntu-latest
     needs: [test, security]
@@ -132,6 +137,7 @@ jobs:
           elyes1kouki/callcenterai-agent:latest
           elyes1kouki/callcenterai-agent:${{ github.sha }}
 
+  # 5. VERIFICATION
   pipeline-verification:
     runs-on: ubuntu-latest
     needs: [lint, test, security, build]
@@ -141,14 +147,14 @@ jobs:
     - name: CI/CD Pipeline Complete
       run: |
         echo "=========================================="
-        echo "✅ CI/CD PIPELINE VERIFIED - ALL GREEN!"
+        echo " CI/CD PIPELINE VERIFIED - ALL GREEN!"
         echo "=========================================="
         echo ""
         echo "Professor Requirements Met:"
         echo "  ✓ Lint (black + isort)"
-        echo "  ✓ Tests (22 tests passed)"
+        echo "  ✓ Tests (unit + integration)"
         echo "  ✓ Security (Bandit + Trivy)"
         echo "  ✓ Docker images built & pushed"
         echo "  ✓ CI/CD pipeline green"
         echo ""
-        echo "🎯 Project ready for validation!"
+        echo " Project ready for validation!"
