@@ -58,7 +58,17 @@ jobs:
       run: |
         mkdir -p ~/.config/dvc
         echo "$GDRIVE_CREDENTIALS" > ~/.config/dvc/gdrive-service-account.json
-        echo "Using service account for DVC"
+
+        echo "Forcing DVC to use service account credentials"
+
+        dvc remote modify gdrive --local gdrive_use_service_account true || true
+        dvc remote modify gdrive --local service_account_json_path ~/.config/dvc/gdrive-service-account.json || true
+
+        dvc remote modify gdrive_remote --local gdrive_use_service_account true || true
+        dvc remote modify gdrive_remote --local service_account_json_path ~/.config/dvc/gdrive-service-account.json || true
+
+        echo "Service account configuration applied"
+
 
     
     - name: Pull models with DVC (skip if fails)
