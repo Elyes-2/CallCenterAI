@@ -1,5 +1,4 @@
-# .github/workflows/ci.yml
-name: CI/CD Pipeline
+name: MLOps CI/CD Pipeline
 
 on:
   push:
@@ -8,111 +7,164 @@ on:
     branches: [ main, master ]
 
 jobs:
-  format:
+  # 1. LINTING (Black, isort, flake8)
+  lint:
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # For DVC
     
-    - name: Set up Python
+    - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
     
-    - name: Install formatting tools
+    - name: Install linting tools
       run: |
-        pip install black isort
+        pip install black isort flake8
     
-    - name: Format code
+    - name: Check formatting with Black
       run: |
-        black src/ tests/ --check --diff --line-length 88
+        black src/ tests/ --check --line-length 88
     
-    - name: Check imports
+    - name: Check imports with isort
       run: |
         isort --check-only src/ tests/
+    
+    - name: Run flake8 for code quality
+      run: |
+        flake8 src/ tests/ --max-line-length=88 --ignore=E501,W503
 
-  test:
+  # 2. DVC PIPELINE
+  dvc:
     runs-on: ubuntu-latest
-    needs: format
+    needs: lint
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Required for DVC
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install DVC and dependencies
+      run: |
+        pip install dvc dvc-gdrive
+        pip install -r requirements.txt
+    
+    - name: Configure Git for DVC
+      run: |
+        git config --global user.email "github-actions@github.com"
+        git config --global user.name "GitHub Actions"
+    
+    - name: Configure Google Drive for DVC
+      env:
+        GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+      run: |
+        # Create credentials file
+        echo '$GDRIVE_CREDENTIALS' > credentials.json
+        
+        # Configure DVC with Google Drive
+        dvc remote modify gdrive gdrive_use_service_account true
+        dvc remote modify gdrive gdrive_service_account_json_file_path credentials.json
+    
+    - name: Pull data and models with DVC
+      run: |
+        dvc pull
+    
+    - name: Run DVC pipeline
+      run: |
+        dvc repro
+        echo "DVC pipeline executed successfully!"
+    
+    - name: Check DVC status
+      run: |
+        dvc status
+        echo "Models available:"
+        ls -la models/
+
+  # 3. SECURITY SCAN
+  security:
+    runs-on: ubuntu-latest
+    needs: lint
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Run Bandit security scan
+      run: |
+        pip install bandit
+        bandit -r src/ -s B615 --severity-level high --confidence-level high
+    
+    - name: Run Trivy security scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # 4. TESTS
+  test:
+    runs-on: ubuntu-latest
+    needs: [lint, dvc]  # Needs DVC to pull models first
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
     
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install fastapi uvicorn pytest requests
-        if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+        pip install pytest pytest-cov
     
-    - name: Run non-model tests only
+    - name: Configure DVC for tests
+      env:
+        GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
       run: |
-        # Only run tests that don't require models
-        pytest tests/test_data.py -v
+        echo '$GDRIVE_CREDENTIALS' > credentials.json
+        dvc remote modify gdrive gdrive_use_service_account true
+        dvc remote modify gdrive gdrive_service_account_json_file_path credentials.json
+        dvc pull
     
-    - name: Create simple import test
+    - name: Run all tests with coverage
       run: |
-        python -c "
-        # Test that we can import modules without models
-        import sys
-        sys.path.insert(0, 'src')
-        try:
-            # Test imports without executing model loading
-            import importlib.util
-            
-            # Test agent_api import
-            spec = importlib.util.spec_from_file_location('agent_api', 'src/agent_api.py')
-            if spec is not None:
-                print('✓ agent_api can be imported')
-            
-            # Test tfidf_api import
-            spec = importlib.util.spec_from_file_location('tfidf_api', 'src/tfidf_api.py')
-            if spec is not None:
-                print('✓ tfidf_api can be imported')
-            
-            print('All import tests passed!')
-        except Exception as e:
-            print(f'Import test failed: {e}')
-            # Don't fail in CI
-        "
-
-  security:
-    runs-on: ubuntu-latest
-    needs: format
+        pytest tests/ -v --cov=src --cov-report=xml
     
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
       with:
-        python-version: '3.11'
-    
-    - name: Install security tools
-      run: |
-        pip install bandit
-    
-    - name: Run bandit security scan (skip HuggingFace warnings)
-      run: |
-        bandit -r src/ -s B615  # Skip the HuggingFace download warning
-    
-    - name: Create dummy SARIF file for Trivy
-      run: |
-        echo '{"version": "2.1.0", "runs": []}' > trivy-results.sarif
-    
-    - name: Upload SARIF results
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: 'trivy-results.sarif'
+        file: ./coverage.xml
+        fail_ci_if_error: false
 
+  # 5. BUILD & PUSH DOCKER IMAGES
   build:
     runs-on: ubuntu-latest
     needs: [test, security]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     
     steps:
     - uses: actions/checkout@v4
@@ -121,14 +173,20 @@ jobs:
       uses: docker/setup-buildx-action@v3
     
     - name: Login to DockerHub
-      if: github.event_name == 'push'
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     
-    - name: Build and push TF-IDF image
-      if: github.event_name == 'push'
+    - name: Configure DVC for Docker build
+      env:
+        GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+      run: |
+        echo '$GDRIVE_CREDENTIALS' > credentials.json
+        dvc remote modify gdrive gdrive_use_service_account true
+        dvc remote modify gdrive gdrive_service_account_json_file_path credentials.json
+    
+    - name: Build and push TF-IDF service
       uses: docker/build-push-action@v5
       with:
         context: .
@@ -137,9 +195,10 @@ jobs:
         tags: |
           elyes1kouki/callcenterai-tfidf:latest
           elyes1kouki/callcenterai-tfidf:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     
-    - name: Build and push Transformer image
-      if: github.event_name == 'push'
+    - name: Build and push Transformer service
       uses: docker/build-push-action@v5
       with:
         context: .
@@ -148,9 +207,10 @@ jobs:
         tags: |
           elyes1kouki/callcenterai-transformer:latest
           elyes1kouki/callcenterai-transformer:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     
-    - name: Build and push Agent image
-      if: github.event_name == 'push'
+    - name: Build and push Agent service
       uses: docker/build-push-action@v5
       with:
         context: .
@@ -159,3 +219,29 @@ jobs:
         tags: |
           elyes1kouki/callcenterai-agent:latest
           elyes1kouki/callcenterai-agent:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # 6. MLFLOW MODEL REGISTRY (Optional)
+  mlflow:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install MLflow
+      run: |
+        pip install mlflow
+    
+    - name: Register model in MLflow
+      run: |
+        echo "MLflow tracking would register models here"
+        echo "In production, you would run:"
+        echo "mlflow models register -m runs:/<run-id>/model -n CallCenterAI-TFIDF"

@@ -27,13 +27,13 @@ try:
         labels = json.load(f)
     print(f"✓ Model loaded successfully with {len(labels['id2label'])} classes")
     print(f"✓ Classes: {list(labels['id2label'].values())}")
-    
+
     # Simulate training metrics (from your Colab results)
     print("\nTraining Metrics (from Colab training):")
     print("  Accuracy: 0.8515")
     print("  F1 Score: 0.8516")
     print("  Note: Model was fine-tuned in Google Colab")
-    
+
 except Exception as e:
     print(f"ERROR checking model: {e}")
     sys.exit(1)
