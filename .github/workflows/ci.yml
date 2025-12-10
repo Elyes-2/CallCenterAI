@@ -50,6 +50,7 @@ jobs:
         pip install dvc dvc-gdrive
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
+        
     
     - name: Configure DVC with Google Drive
       env:
@@ -59,7 +60,7 @@ jobs:
         echo "Secret length: ${#GDRIVE_CREDENTIALS}"
         
         # Create credentials file with proper JSON formatting
-        echo '$GDRIVE_CREDENTIALS' > credentials.json
+        echo "$GDRIVE_CREDENTIALS" > credentials.json
         echo "Created credentials.json"
         ls -la credentials.json
         head -c 200 credentials.json
@@ -101,7 +102,7 @@ jobs:
     - name: Run Bandit security scan
       run: |
         pip install bandit==1.7.8
-        bandit -r src/ -s B615 --severity-level high
+        bandit -r src/ --severity-level high
     
     - name: Run Trivy scan (scan only, no upload)
       run: |
