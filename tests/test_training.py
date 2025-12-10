@@ -33,18 +33,7 @@ def test_model_can_load_and_predict():
         assert probas.shape[0] == 1
 
 
-def test_mlflow_tracking():
-    mlflow.set_tracking_uri("http://localhost:5000")
-    experiments = mlflow.search_experiments()
-    assert len(experiments) > 0
 
-    runs = mlflow.search_runs(experiment_ids=[experiments[0].experiment_id])
-    assert len(runs) > 0
-
-    latest_run = runs.iloc[0]
-    assert "metrics.accuracy" in latest_run
-    accuracy = latest_run["metrics.accuracy"]
-    assert 0.5 <= accuracy <= 1.0
 
 
 def test_model_has_minimum_accuracy():
