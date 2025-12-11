@@ -1,4 +1,4 @@
-# btw im working on google colab
+
 # 1 installation of required libraries
 #!pip install pandas scikit-learn mlflow joblib nltk stop-words
 
@@ -171,7 +171,7 @@ print(classification_report(y_test, y_pred_base))
 #best accuracy 0.851 somehow
 
 
-# 7 using calibratedclassifiercv approach(text classification with calibrated probabilities te5ou a9al wa9et que lo5ra )
+# 7 using calibratedclassifiercv approach(text classification with calibrated probabilities)
 cv_strategy = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
 base_svm = LinearSVC(
@@ -211,7 +211,7 @@ print(f"Calibrated Accuracy: {accuracy_calib:.4f}")
 print(f"Calibrated F1 Score: {f1_calib:.4f}")
 print("\nDetailed Classification Report:")
 print(classification_report(y_test, y_pred_calib))
-#0.853 accuracy 5ir mel lo5ra bchwayyyaaa
+#0.853 accuracy 
 
 
 
@@ -343,7 +343,6 @@ print(f"Category: {pred}, Confidence: {proba:.2f}")
 
 
 
-# aproach o5ra habit ntestiha ama te5ou wa9et 7 calibrate the model for probability estimates (more accurate probabilities)
 calibrated_svc = CalibratedClassifierCV(LinearSVC(), cv=5, method='sigmoid')  # For probs
 pipeline_calib = Pipeline([
     ('tfidf', TfidfVectorizer()),
@@ -363,4 +362,4 @@ cv = StratifiedKFold(n_splits=5)
 grid_search = GridSearchCV(pipeline_calib, param_grid, cv=cv, scoring='f1_weighted', n_jobs=-1, verbose=1)
 grid_search.fit(X_train, y_train)
 print("Best Params:", grid_search.best_params_)
-print("Best CV F1:", grid_search.best_score_)   # te5ou wa9et kbir
+print("Best CV F1:", grid_search.best_score_)   

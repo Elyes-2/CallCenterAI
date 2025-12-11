@@ -83,7 +83,6 @@ print(f"\nText Length Statistics:")
 print(f"Min: {df['text_length'].min()} chars")
 print(f"Max: {df['text_length'].max()} chars")
 print(f"95th percentile: {df['text_length'].quantile(0.95):.0f} chars")
-#graphs y3awnouk bech tchouf distribution
 
 
 #4 cleaning function
