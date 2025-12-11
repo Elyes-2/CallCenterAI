@@ -334,10 +334,10 @@ if __name__ == "__main__":
 
     uvicorn.run(app, host="0.0.0.0", port=8000)  # nosec B104
 
-# testing commend for i in {1..20}; do
- echo -e "\n=== Test $i ==="
- curl -X POST http://localhost:8000/classify \
-  -H "Content-Type: application/json" \
- --data @tests_agent/test$i.json
- sleep 0.3
- done
+# # testing commend for i in {1..20}; do
+#  echo -e "\n=== Test $i ==="
+#  curl -X POST http://localhost:8000/classify \
+#   -H "Content-Type: application/json" \
+#  --data @tests_agent/test$i.json
+#  sleep 0.3
+#  done
