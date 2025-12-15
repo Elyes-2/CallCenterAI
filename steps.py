@@ -140,7 +140,7 @@ print("\nClass weights:", class_weight_dict)
 # 6 build the pipeline using TF-IDF and Linear SVM
 pipeline = Pipeline([
     ('tfidf', TfidfVectorizer(
-        max_features=30000,  # Increased features e5er hal 
+        max_features=30000,  # Increased features 
         ngram_range=(1, 3),  
         min_df=2,          
         max_df=0.9,        
@@ -215,7 +215,7 @@ print(classification_report(y_test, y_pred_calib))
 
 
 
-# best selected (5tar 2 approach)
+# best selected
 def evaluate_model_cv(pipeline, X, y, cv=3):
     """Evaluate model using cross-validation"""
     scores = cross_val_score(pipeline, X, y, cv=cv, scoring='f1_weighted')
@@ -297,7 +297,7 @@ joblib.dump(best_model, model_filename)
 print(f" Model saved as: {model_filename}")
 
 
-# 9 dyel mlflow logging
+# 9  mlflow logging
 
 
 mlflow.set_experiment("CallCenterAI_TFIDF_SVM")

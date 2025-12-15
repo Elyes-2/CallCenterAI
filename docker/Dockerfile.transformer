@@ -4,7 +4,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 COPY req.txt .
-RUN pip install --no-cache-dir -r req.txt
+RUN pip install --no-cache-dir --default-timeout=1000  --retries 10 -r req.txt
 
 COPY src/transformer_api.py .
 COPY models/enhanced_multilingual_model ./models/enhanced_multilingual_model
